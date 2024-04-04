@@ -1,5 +1,6 @@
 import json
 import requests
+from dagster_quickstart import io 
 
 import pandas as pd
 
@@ -12,15 +13,11 @@ from dagster_quickstart.configurations import HNStoriesConfig
 
 
 @asset
-def hackernews_top_story_ids(config: HNStoriesConfig):
+def read_csv(config: HNStoriesConfig):
     """Get top stories from the HackerNews top stories endpoint."""
-    top_story_ids = requests.get("https://hacker-news.firebaseio.com/v0/topstories.json").json()
+    return io.read_csv_from_zip("data/archive.zip","rideshare_kaggle.csv")
 
-    with open(config.hn_top_story_ids_path, "w") as f:
-        json.dump(top_story_ids[: config.top_stories_limit], f)
-
-
-@asset(deps=[hackernews_top_story_ids])
+@asset(deps=[read_csv])
 def hackernews_top_stories(config: HNStoriesConfig) -> MaterializeResult:
     """Get items based on story ids from the HackerNews items endpoint."""
     with open(config.hn_top_story_ids_path, "r") as f:
